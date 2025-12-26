@@ -1,0 +1,12 @@
+package com.kbalazsworks.elastic_fetcher_api.domain.value_objects
+
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class LogEntry(
+    @JsonProperty("app") val app: String?,
+    @JsonProperty("level") val level: String?,
+    @JsonProperty("raw_message") val rawMessage: String?,
+    @JsonProperty("message") val message: String?
+)

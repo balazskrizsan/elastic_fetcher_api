@@ -1,0 +1,23 @@
+package com.kbalazsworks
+
+import org.springframework.aot.hint.MemberCategory
+import org.springframework.aot.hint.RuntimeHints
+import org.springframework.aot.hint.RuntimeHintsRegistrar
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+@RegisterReflectionForBinding(
+    {{#classNames}}
+    {{.}},
+    {{/classNames}}
+)
+class AppRuntimeHintsRegistrar : RuntimeHintsRegistrar {
+    override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
+        val categories = MemberCategory.entries.toTypedArray()
+
+        {{#classNames}}
+        hints.reflection().registerType({{.}}.java, *categories)
+        {{/classNames}}
+    }
+}
