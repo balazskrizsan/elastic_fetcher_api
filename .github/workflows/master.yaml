@@ -1,0 +1,65 @@
+name: GraalVM Linux build
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: # The permissions the surefire test report
+      checks: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Release version env variable
+        run: |
+          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "COMMIT_SHA_SHORT=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Example step
+        run: |
+          echo "GRAALVM_HOME: $GRAALVM_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java --version
+          native-image --version
+
+      - name: Build
+        env:
+          SERVER_ENV: DEV
+          SERVER_PORT: 9999
+          NATIVE_REFLECTION_CONFIGURATION_GENERATOR_ENABLED: false
+        run: mvn native:compile -Pnative -Dspring.profiles.active=native -DskipTests -Dslogback.logstash.enabled=false -Dnative.reflection-configuration-generator.enabled=false
+
+      - uses: scacap/action-surefire-report@v1
+        if: success() || failure()
+        # if: github.ref != 'refs/heads/master'
+        with:
+          check_name: Surefire test report
+          report_paths: '**/surefire-reports/*.xml'
+
+      - name: File system info
+        run: |
+          echo "===========> github.workspace var: ${{ github.workspace }}"
+          echo "===========> pwd:"
+          pwd
+          echo "===========> ls -hal:"
+          ls -hal
+          echo "===========> ls -hal /src:"
+          ls -hal ./src
+          echo "===========> ls -hal /target:"
+          ls -hal ./target
