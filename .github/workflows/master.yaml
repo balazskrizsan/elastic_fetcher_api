@@ -31,7 +31,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Example step
+      - name: Versions
         run: |
           echo "GRAALVM_HOME: $GRAALVM_HOME"
           echo "JAVA_HOME: $JAVA_HOME"
@@ -63,3 +63,10 @@ jobs:
           ls -hal ./src
           echo "===========> ls -hal /target:"
           ls -hal ./target
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          push: true
+          tags: kbalazsworks/elastic_fetcher_api:${{ env.RELEASE_VERSION }}, kbalazsworks/elastic_fetcher_api:latest, kbalazsworks/elastic_fetcher_api:commit_sha_short_${{ env.COMMIT_SHA_SHORT }}
