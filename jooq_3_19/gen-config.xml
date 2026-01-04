@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="https://www.jooq.org/xsd/jooq-codegen-3.19.8.xsd">
+    <jdbc>
+        <driver>org.postgresql.Driver</driver>
+        <url>jdbc:postgresql://localhost:3110/app_db</url>
+        <user>admin</user>
+        <password>password</password>
+        <properties>
+            <property>
+                <key>user</key>
+                <value>admin</value>
+            </property>
+            <property>
+                <key>password</key>
+                <value>password</value>
+            </property>
+        </properties>
+    </jdbc>
+    <logging>DEBUG</logging>
+    <generator>
+        <name>org.jooq.codegen.KotlinGenerator</name>
+        <database>
+            <name>org.jooq.meta.postgres.PostgresDatabase</name>
+            <includes>.*</includes>
+            <inputSchema>public</inputSchema>
+            <properties>
+                <property>
+                    <key>dialect</key>
+                    <value>POSTGRES_15</value>
+                </property>
+            </properties>
+            <customTypes>
+                <customType>
+                    <name>pgvector</name>
+                    <type>com.pgvector.PGvector</type>
+                    <binding>com.kbalazsworks.semantic_log_classifier_api.common.binder.PgVectorBinding</binding>
+                </customType>
+            </customTypes>
+            <forcedTypes>
+                <forcedType>
+                    <name>pgvector</name>
+                    <types>vector</types>
+                    <expression>.*embedding.*</expression>
+                </forcedType>
+            </forcedTypes>
+        </database>
+        <generate>
+            <!-- Tell the KotlinGenerator to generate properties in addition to methods for these paths. Default is true. -->
+            <implicitJoinPathsAsKotlinProperties>true</implicitJoinPathsAsKotlinProperties>
+            <!--  Workaround for Kotlin generating setX() setters instead of setIsX() in byte code for mutable properties called
+                  <code>isX</code>. Default is true. -->
+            <kotlinSetterJvmNameAnnotationsOnIsPrefix>true</kotlinSetterJvmNameAnnotationsOnIsPrefix>
+            <!-- Generate POJOs as data classes, when using the KotlinGenerator. Default is true. -->
+            <pojosAsKotlinDataClasses>true</pojosAsKotlinDataClasses>
+            <!-- Generate non-nullable types on POJO attributes, where column is not null. Default is false. -->
+            <kotlinNotNullPojoAttributes>false</kotlinNotNullPojoAttributes>
+            <!-- Generate non-nullable types on Record attributes, where column is not null. Default is false. -->
+            <kotlinNotNullRecordAttributes>false</kotlinNotNullRecordAttributes>
+            <!-- Generate non-nullable types on interface attributes, where column is not null. Default is false. -->
+            <kotlinNotNullInterfaceAttributes>false</kotlinNotNullInterfaceAttributes>
+            <!-- Generate defaulted nullable POJO attributes. Default is true. -->
+            <kotlinDefaultedNullablePojoAttributes>true</kotlinDefaultedNullablePojoAttributes>
+            <!-- Generate defaulted nullable Record attributes. Default is true. -->
+            <kotlinDefaultedNullableRecordAttributes>true</kotlinDefaultedNullableRecordAttributes>
+        </generate>
+        <target>
+            <packageName>com.kbalazsworks.elastic_fetcher_api.domain.db</packageName>
+            <directory>./../src/main/kotlin/</directory>
+        </target>
+    </generator>
+</configuration>
