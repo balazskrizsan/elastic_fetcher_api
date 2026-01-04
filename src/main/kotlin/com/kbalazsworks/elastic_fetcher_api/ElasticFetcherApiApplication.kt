@@ -1,6 +1,5 @@
 package com.kbalazsworks.elastic_fetcher_api
 
-import com.kbalazsworks.AppRuntimeHintsRegistrar
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ImportRuntimeHints

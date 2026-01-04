@@ -2,7 +2,7 @@
 PROD, UAT, LOCAL-PROD, DEV, DEV_NATIVE, TEST
 
 #### DEV Env vars:
-LOGBACK_LOGSTASH_ENABLED=true;LOGBACK_LOGSTASH_FULL_HOST=localhost:5044;SERVER_ENV=DEV;SERVER_PORT=4000
+LOGBACK_LOGSTASH_ENABLED=true;LOGBACK_LOGSTASH_FULL_HOST=localhost:5044;SERVER_ENV=DEV;SERVER_PORT=3100;SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:3110/app_db;SPRING_FLYWAY_URL=jdbc:postgresql://localhost:3110/app_db
 
 #### Create native runnable application - NO test run
 

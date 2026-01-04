@@ -1,31 +1,29 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.schedulers
 
-import com.kbalazsworks.elastic_fetcher_api.domain.repositories.SemanticLogClassifierRepository.ILogApi
-import com.kbalazsworks.elastic_fetcher_api.domain.services.ElkBatchLogReader
+import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ElasticService
+import com.kbalazsworks.elastic_fetcher_api.domain.services.RunStateService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.Scheduled
-import java.time.Instant
+import org.springframework.stereotype.Component
 
-@Configuration
+@Component
 class ElasticFetcherScheduler(
-    private val logApi: ILogApi
+    private val runStateService: RunStateService,
+    private val elasticService: ElasticService,
+    private val logApi: ILogApi,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(this::class.java)
+        private val indexName = "logs-dev"
+        private val errorIndexName = "alerting-logs-dev"
     }
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedDelay = 3000000)
     fun periodicFetch() {
-        ElkBatchLogReader().fetchAllWarnAndAbove(
-            index = "logs-dev",
-            from = Instant.parse("2025-12-22T00:00:00Z")
-        ) { elasticDoc ->
-            val level = elasticDoc.level ?: return@fetchAllWarnAndAbove
-            val message = elasticDoc.message ?: return@fetchAllWarnAndAbove
-            val rawMessage = elasticDoc.rawMessage ?: return@fetchAllWarnAndAbove
+        log.info("FixedDelay scheduling started")
 
-            log.info(logApi.postClassification(ILogApi.Request(level, message, rawMessage)).body.toString())
-        }
+        ClassifierService(runStateService, elasticService, logApi).start(indexName, errorIndexName)
     }
 }

@@ -19,10 +19,6 @@ class ElasticClientFactory() {
         )
     )
 
-    init {
-        println(elasticJsonpMapper().registeredModuleIds)
-    }
-
     fun elasticJsonpMapper(): JsonMapper = JsonMapper.builder()
         .addModule(JavaTimeModule())
         .addModule(Jdk8Module())
