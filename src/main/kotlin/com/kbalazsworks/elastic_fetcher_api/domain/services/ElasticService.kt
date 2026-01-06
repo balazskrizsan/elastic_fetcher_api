@@ -1,5 +1,6 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.services
 
+import co.elastic.clients.elasticsearch._types.FieldValue
 import co.elastic.clients.elasticsearch._types.SortOrder
 import co.elastic.clients.elasticsearch.core.search.Hit
 import co.elastic.clients.json.JsonData
@@ -9,16 +10,15 @@ import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService.Cl
 import com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import kotlin.collections.forEach
 
 @Service
 class ElasticService {
     companion object {
+        val client = ElasticClientFactory().create()
         private val log = LoggerFactory.getLogger(this::class.java)
     }
 
-    fun fetch(index: String, batchSize: Int): List<Hit<LogEntry>> {
-        val client = ElasticClientFactory().create()
+    fun fetch(index: String, batchSize: Int, lastTimestamp: Long? = null, lastDoc: Long? = null): List<Hit<LogEntry>> {
         val response = client.search(
             { s ->
                 s.index(index)
@@ -30,6 +30,16 @@ class ElasticService {
                             b.filter {
                                 it.range { r -> r.field("level_value").gte(JsonData.of(30000)) }
                             }
+                        }
+                    }
+                    .apply {
+                        if (lastTimestamp != null && lastDoc != null) {
+                            searchAfter(
+                                listOf(
+                                    FieldValue.of(lastTimestamp),
+                                    FieldValue.of(lastDoc)
+                                )
+                            )
                         }
                     }
             },
@@ -44,8 +54,6 @@ class ElasticService {
 
     fun sendBulk(index: String, entries: List<VectorStoreXSimilarity>) {
         if (entries.isEmpty()) return
-
-        val client = ElasticClientFactory().create()
 
         val bulkRequest = client.bulk { b ->
             entries.forEach { entry ->

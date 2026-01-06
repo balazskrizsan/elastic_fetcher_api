@@ -24,4 +24,6 @@ class RunStateService(private val repository: RunStateRepository) {
 
         repository._saveOnDuplicateKeyUpdate(RunState(index, lastTimestamp, lastDoc))
     }
+
+    fun getByIndex(index: String) = repository._getOneById(index)
 }

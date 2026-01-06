@@ -41,11 +41,11 @@ abstract class AbstractCrudRepository<ENTITY, TABLE_TYPE : TableImpl<RECORD_TYPE
         .fetchOneInto(tableMeta.entityClass)
         ?: throwNotFound()
 
-    fun _getOneById(id: Long): ENTITY = getCtx()
+    fun <T> _getOneById(id: T): ENTITY = getCtx()
         .selectFrom(tableMeta.table)
         .where(getIdField().eq(id))
         .fetchOneInto(tableMeta.entityClass)
-        ?: throwNotFound(tableMeta.table.name, id)
+        ?: throwNotFoundGeneric(tableMeta.table.name, id)
 
     fun _getByIdsKeepOrder(ids: List<Long>): MutableList<ENTITY> {
         val unnestedIds = DSL
@@ -67,5 +67,8 @@ abstract class AbstractCrudRepository<ENTITY, TABLE_TYPE : TableImpl<RECORD_TYPE
     private fun getIdField() = tableMeta.table.primaryKey?.fields?.first() as TableField<RECORD_TYPE, Any?>
 
     private fun throwNotFound(tableName: String = "undefined", id: Long? = null): Nothing =
+        throw OrmException("Record not found; table: $tableName; id: $id")
+
+    private fun <T> throwNotFoundGeneric(tableName: String = "undefined", id: T? = null): Nothing =
         throw OrmException("Record not found; table: $tableName; id: $id")
 }
