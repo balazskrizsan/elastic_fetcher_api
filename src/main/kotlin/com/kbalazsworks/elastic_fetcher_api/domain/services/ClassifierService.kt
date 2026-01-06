@@ -18,28 +18,26 @@ class ClassifierService(
 
     data class ClassifiedError(val similarity: Float, val message: String, val contextInfoMessage: String)
 
-    fun start(index: String, errorIndexName: String, batchSize: Int = 20) {
-        while (true) {
-            val state = runStateService.getByIndex(index)
-            log.info("Cycle start: {} / {}", index, state.timestamp)
+    fun run(index: String, errorIndexName: String, batchSize: Int = 20): Boolean {
+        val state = runStateService.getByIndex(index)
+        log.info("Cycle start: {} / {}", index, state.timestamp)
 
-            val hits = elasticService.fetch(index, batchSize, state.timestamp, state.doc)
-            if (hits.isEmpty()) {
-                log.debug("No new documents for index={}", index)
+        val hits = elasticService.fetch(index, batchSize, state.timestamp, state.doc)
+        if (hits.isEmpty()) {
+            log.debug("No new documents for index={}", index)
 
-                Thread.sleep(1_000)
-
-                continue
-            }
-
-            runStateService.saveLastHit(index, hits.last())
-
-            val classifiedResponses = hits
-                .mapNotNull { it.source() }
-                .mapNotNull(::processLog)
-
-            elasticService.sendBulk(errorIndexName, classifiedResponses)
+            return false
         }
+
+        runStateService.saveLastHit(index, hits.last())
+
+        val classifiedResponses = hits
+            .mapNotNull { it.source() }
+            .mapNotNull(::processLog)
+
+        elasticService.sendBulk(errorIndexName, classifiedResponses)
+
+        return true
     }
 
     private fun processLog(doc: LogEntry): VectorStoreXSimilarity? {
