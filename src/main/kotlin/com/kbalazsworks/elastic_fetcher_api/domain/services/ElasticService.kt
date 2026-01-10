@@ -4,12 +4,13 @@ import co.elastic.clients.elasticsearch._types.FieldValue
 import co.elastic.clients.elasticsearch._types.SortOrder
 import co.elastic.clients.elasticsearch.core.search.Hit
 import co.elastic.clients.json.JsonData
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.kbalazsworks.elastic_fetcher_api.domain.factories.ElasticClientFactory
-import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi.VectorStoreXSimilarity
-import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService.ClassifiedError
+import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
 import com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.Instant
 
 @Service
 class ElasticService {
@@ -17,6 +18,13 @@ class ElasticService {
         val client = ElasticClientFactory().create()
         private val log = LoggerFactory.getLogger(this::class.java)
     }
+
+    data class ClassifiedError(
+        val similarity: Float,
+        val message: String,
+        val contextInfoMessage: String,
+        @field:JsonProperty("@timestamp") val timestamp: Instant
+    )
 
     fun fetch(index: String, batchSize: Int, lastTimestamp: Long? = null, lastDoc: Long? = null): List<Hit<LogEntry>> {
         val response = client.search(
@@ -34,12 +42,7 @@ class ElasticService {
                     }
                     .apply {
                         if (lastTimestamp != null && lastDoc != null) {
-                            searchAfter(
-                                listOf(
-                                    FieldValue.of(lastTimestamp),
-                                    FieldValue.of(lastDoc)
-                                )
-                            )
+                            searchAfter(listOf(FieldValue.of(lastTimestamp), FieldValue.of(lastDoc)))
                         }
                     }
             },
@@ -52,19 +55,26 @@ class ElasticService {
         return hits
     }
 
-    fun sendBulk(index: String, entries: List<VectorStoreXSimilarity>) {
+    fun sendBulk(index: String, entries: List<ILogApi.Response>) {
         if (entries.isEmpty()) return
 
         val bulkRequest = client.bulk { b ->
             entries.forEach { entry ->
-                val contextInfoType = entry.vectorStoreX.contextInfo["type"]
-                val contextInfoMessage = entry.vectorStoreX.contextInfo["text"]
+                val contextInfo = entry.vectorStoreXSimilarity.vectorStoreX.contextInfo
+                val contextInfoType = contextInfo["type"]
+                val contextInfoMessage = contextInfo["text"]
 
                 if (contextInfoType != null && contextInfoMessage != null) {
                     b.operations { op ->
                         op.index { idx ->
-                            idx.index(index)
-                                .document(ClassifiedError(entry.similarity, contextInfoType, contextInfoMessage))
+                            idx.index(index).document(
+                                ClassifiedError(
+                                    entry.vectorStoreXSimilarity.similarity,
+                                    contextInfoType,
+                                    contextInfoMessage,
+                                    entry.originalRequest.timestamp
+                                )
+                            )
                         }
                     }
                 }

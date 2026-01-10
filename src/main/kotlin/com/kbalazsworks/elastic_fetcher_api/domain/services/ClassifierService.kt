@@ -16,8 +16,6 @@ class ClassifierService(
         private val log = LoggerFactory.getLogger(this::class.java)
     }
 
-    data class ClassifiedError(val similarity: Float, val message: String, val contextInfoMessage: String)
-
     fun run(index: String, errorIndexName: String, batchSize: Int = 20): Boolean {
         val state = runStateService.getByIndex(index)
         log.info("Cycle start: {} / {}", index, state.timestamp)
@@ -40,13 +38,14 @@ class ClassifierService(
         return true
     }
 
-    private fun processLog(doc: LogEntry): VectorStoreXSimilarity? {
+    private fun processLog(doc: LogEntry): ILogApi.Response? {
         val level = doc.level ?: return null
         val message = doc.message ?: return null
         val structuredMessage = doc.structuredMessage ?: return null
+        val timestamp = doc.timestamp ?: return null
 
-        val response = logApi.postClassification(ILogApi.Request(level, structuredMessage, message))
+        val response = logApi.postClassification(ILogApi.Request(level, structuredMessage, message, timestamp))
 
-        return response.body?.data?.first()
+        return response.body?.data
     }
 }
