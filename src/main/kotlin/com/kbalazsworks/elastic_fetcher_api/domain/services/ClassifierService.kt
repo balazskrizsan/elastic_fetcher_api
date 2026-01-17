@@ -1,7 +1,6 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.services
 
 import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
-import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi.VectorStoreXSimilarity
 import com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -20,7 +19,7 @@ class ClassifierService(
         val state = runStateService.getByIndex(index)
         log.info("Cycle start: {} / {}", index, state.timestamp)
 
-        val hits = elasticService.fetch(index, batchSize, state.timestamp, state.doc)
+        val hits = elasticService.fetchOverInfo(index, batchSize, state.timestamp, state.doc)
         if (hits.isEmpty()) {
             log.debug("No new documents for index={}", index)
 

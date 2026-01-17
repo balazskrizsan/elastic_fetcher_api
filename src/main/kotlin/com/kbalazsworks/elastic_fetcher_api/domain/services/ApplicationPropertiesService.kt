@@ -40,4 +40,22 @@ class ApplicationPropertiesService {
     val isNativeReflectionConfigurationGeneratorEnabledEnabled: Boolean by lazy {
         nativeReflectionConfigurationGeneratorEnabledEnabled.toBoolean()
     }
+
+    @Value("\${app.elastic-fetcher-task-enabled}")
+    private lateinit var appElasticFetcherTaskEnabled: String
+    val isAppElasticFetcherTaskEnabled: Boolean by lazy {
+        appElasticFetcherTaskEnabled.toBoolean()
+    }
+
+    @Value("\${app.elastic-host}")
+    lateinit var appElasticHost: String
+
+    @Value("\${app.elastic-port}")
+    private lateinit var appElasticPortString: String
+    val appElasticPort: Int by lazy {
+        appElasticPortString.toInt()
+    }
+
+    @Value("\${app.elastic-scheme}")
+    lateinit var appElasticScheme: String
 }

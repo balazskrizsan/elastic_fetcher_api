@@ -1,6 +1,7 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.tasks
 
 import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ElasticService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.RunStateService
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class ElasticFetcherTask(
+    private val applicationPropertiesService: ApplicationPropertiesService,
     private val runStateService: RunStateService,
     private val elasticService: ElasticService,
     private val logApi: ILogApi,
@@ -26,6 +28,10 @@ class ElasticFetcherTask(
 
     @PostConstruct
     fun start() {
+        if (!applicationPropertiesService.isAppElasticFetcherTaskEnabled) {
+            return
+        }
+
         classifierService = ClassifierService(runStateService, elasticService, logApi)
 
         thread = Thread {
@@ -62,8 +68,13 @@ class ElasticFetcherTask(
 
     @PreDestroy
     fun stop() {
+        if (!applicationPropertiesService.isAppElasticFetcherTaskEnabled) {
+            return
+        }
         log.info("Stopping classifier thread")
 
-        thread.interrupt()
+        if (::thread.isInitialized) {
+            thread.interrupt()
+        }
     }
 }

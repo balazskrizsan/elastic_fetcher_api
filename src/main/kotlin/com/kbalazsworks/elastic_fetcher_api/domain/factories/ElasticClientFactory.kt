@@ -8,13 +8,16 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService
 import org.apache.http.HttpHost
 import org.elasticsearch.client.RestClient
+import org.springframework.stereotype.Service
 
-class ElasticClientFactory() {
+@Service
+class ElasticClientFactory(private val ap: ApplicationPropertiesService) {
     fun create() = ElasticsearchClient(
         RestClientTransport(
-            RestClient.builder(HttpHost("localhost", 9200, "http")).build(),
+            RestClient.builder(HttpHost(ap.appElasticHost, ap.appElasticPort, ap.appElasticScheme)).build(),
             JacksonJsonpMapper(elasticJsonpMapper())
         )
     )

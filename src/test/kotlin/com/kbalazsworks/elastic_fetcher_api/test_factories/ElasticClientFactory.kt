@@ -1,0 +1,28 @@
+package com.kbalazsworks.elastic_fetcher_api.test_factories
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient
+import co.elastic.clients.json.jackson.JacksonJsonpMapper
+import co.elastic.clients.transport.rest_client.RestClientTransport
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import org.apache.http.HttpHost
+import org.elasticsearch.client.RestClient
+
+class ElasticClientFactory() {
+    fun create(hostname: String, port: Int, scheme: String) = ElasticsearchClient(
+        RestClientTransport(
+            RestClient.builder(HttpHost(hostname, port, scheme)).build(),
+            JacksonJsonpMapper(elasticJsonpMapper())
+        )
+    )
+
+    fun elasticJsonpMapper(): JsonMapper = JsonMapper.builder()
+        .addModule(JavaTimeModule())
+        .addModule(Jdk8Module())
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .build()
+}

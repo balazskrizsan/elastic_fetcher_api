@@ -1,11 +1,10 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.services
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient
 import co.elastic.clients.elasticsearch._types.FieldValue
 import co.elastic.clients.elasticsearch._types.SortOrder
-import co.elastic.clients.elasticsearch.core.search.Hit
 import co.elastic.clients.json.JsonData
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.kbalazsworks.elastic_fetcher_api.domain.factories.ElasticClientFactory
 import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
 import com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry
 import org.slf4j.LoggerFactory
@@ -13,9 +12,8 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 
 @Service
-class ElasticService {
+class ElasticService(private val elasticsearchClient: ElasticsearchClient) {
     companion object {
-        val client = ElasticClientFactory().create()
         private val log = LoggerFactory.getLogger(this::class.java)
     }
 
@@ -26,8 +24,8 @@ class ElasticService {
         @field:JsonProperty("@timestamp") val timestamp: Instant
     )
 
-    fun fetch(index: String, batchSize: Int, lastTimestamp: Long? = null, lastDoc: Long? = null): List<Hit<LogEntry>> {
-        val response = client.search(
+    fun fetchOverInfo(index: String, batchSize: Int, lastTimestamp: Long? = null, lastDoc: Long? = null) =
+        elasticsearchClient.search(
             { s ->
                 s.index(index)
                     .size(batchSize)
@@ -36,7 +34,7 @@ class ElasticService {
                     .query { q ->
                         q.bool { b ->
                             b.filter {
-                                it.range { r -> r.field("level_value").gte(JsonData.of(30000)) }
+                                it.range { r -> r.field("level_value").gte(JsonData.of(30001)) }
                             }
                         }
                     }
@@ -48,30 +46,28 @@ class ElasticService {
             },
             LogEntry::class.java
         )
-
-        val hits = response.hits().hits()
-        log.info("Number of elastic hits: {}", hits.size)
-
-        return hits
-    }
+            .hits()
+            .hits()
+            .also { log.info("Number of elastic hits: {}", it.size) }
 
     fun sendBulk(index: String, entries: List<ILogApi.Response>) {
-        if (entries.isEmpty()) return
+        entries.ifEmpty { return }
 
-        val bulkRequest = client.bulk { b ->
+        val bulkResponse = elasticsearchClient.bulk { b ->
             entries.forEach { entry ->
-                val contextInfo = entry.vectorStoreXSimilarity.vectorStoreX.contextInfo
-                val contextInfoType = contextInfo["type"]
-                val contextInfoMessage = contextInfo["text"]
+                val ctx = entry.vectorStoreXSimilarity.vectorStoreX.contextInfo
 
-                if (contextInfoType != null && contextInfoMessage != null) {
-                    b.operations { op ->
-                        op.index { idx ->
+                val type = ctx["type"]
+                val message = ctx["text"]
+
+                if (type != null && message != null) {
+                    b.operations {
+                        it.index { idx ->
                             idx.index(index).document(
                                 ClassifiedError(
                                     entry.vectorStoreXSimilarity.similarity,
-                                    contextInfoType,
-                                    contextInfoMessage,
+                                    type,
+                                    message,
                                     entry.originalRequest.timestamp
                                 )
                             )
@@ -82,10 +78,9 @@ class ElasticService {
             b
         }
 
-        if (bulkRequest.errors()) {
-            log.error("Bulk sending error items: {}", bulkRequest.items())
-
-            throw Exception("Bulk send error")
+        bulkResponse.takeIf { it.errors() }?.let {
+            log.error("Bulk sending error items: {}", it.items())
+            error("Bulk send error")
         }
     }
 }
