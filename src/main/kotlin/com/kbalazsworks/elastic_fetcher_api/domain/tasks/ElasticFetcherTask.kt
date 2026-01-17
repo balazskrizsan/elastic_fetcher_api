@@ -1,18 +1,19 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.tasks
 
 import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
-import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService.Companion.APP__ELASTIC_FETCHER_TASK_ENABLED
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ElasticService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.RunStateService
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 @Component
+@ConditionalOnProperty(name = [APP__ELASTIC_FETCHER_TASK_ENABLED])
 class ElasticFetcherTask(
-    private val applicationPropertiesService: ApplicationPropertiesService,
     private val runStateService: RunStateService,
     private val elasticService: ElasticService,
     private val logApi: ILogApi,
@@ -28,10 +29,6 @@ class ElasticFetcherTask(
 
     @PostConstruct
     fun start() {
-        if (!applicationPropertiesService.isAppElasticFetcherTaskEnabled) {
-            return
-        }
-
         classifierService = ClassifierService(runStateService, elasticService, logApi)
 
         thread = Thread {
@@ -68,9 +65,6 @@ class ElasticFetcherTask(
 
     @PreDestroy
     fun stop() {
-        if (!applicationPropertiesService.isAppElasticFetcherTaskEnabled) {
-            return
-        }
         log.info("Stopping classifier thread")
 
         if (::thread.isInitialized) {

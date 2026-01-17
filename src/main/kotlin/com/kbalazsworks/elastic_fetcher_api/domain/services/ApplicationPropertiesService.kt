@@ -5,6 +5,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class ApplicationPropertiesService {
+    companion object{
+        const val APP__ELASTIC_FETCHER_TASK_ENABLED = "app.elastic-fetcher-task-enabled"
+    }
+
     @Value("\${spring.application.name}")
     lateinit var springApplicationName: String
 
@@ -41,7 +45,7 @@ class ApplicationPropertiesService {
         nativeReflectionConfigurationGeneratorEnabledEnabled.toBoolean()
     }
 
-    @Value("\${app.elastic-fetcher-task-enabled}")
+    @Value("\${$APP__ELASTIC_FETCHER_TASK_ENABLED}")
     private lateinit var appElasticFetcherTaskEnabled: String
     val isAppElasticFetcherTaskEnabled: Boolean by lazy {
         appElasticFetcherTaskEnabled.toBoolean()
