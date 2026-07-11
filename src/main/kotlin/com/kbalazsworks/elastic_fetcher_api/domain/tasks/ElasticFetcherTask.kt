@@ -1,6 +1,7 @@
 package com.kbalazsworks.elastic_fetcher_api.domain.tasks
 
 import com.kbalazsworks.elastic_fetcher_api.domain.repositories.semantic_log_classifier.ILogApi
+import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService.Companion.APP__ELASTIC_FETCHER_TASK_ENABLED
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ClassifierService
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ElasticService
@@ -17,11 +18,10 @@ class ElasticFetcherTask(
     private val runStateService: RunStateService,
     private val elasticService: ElasticService,
     private val logApi: ILogApi,
+    private val applicationPropertiesService: ApplicationPropertiesService,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(this::class.java)
-        private const val INDEX_NAME = "logs-dev"
-        private const val INDEX_ERROR_NAME = "alerting-logs-dev"
     }
 
     private lateinit var thread: Thread
@@ -36,7 +36,7 @@ class ElasticFetcherTask(
 
             while (!Thread.currentThread().isInterrupted) {
                 try {
-                    val hasClassifiedDocs = classifierService.run(INDEX_NAME, INDEX_ERROR_NAME)
+                    val hasClassifiedDocs = classifierService.run(applicationPropertiesService.appElasticIndexName, applicationPropertiesService.appElasticIndexErrorName)
                     if (!hasClassifiedDocs) {
                         Thread.sleep(1_000)
                     }

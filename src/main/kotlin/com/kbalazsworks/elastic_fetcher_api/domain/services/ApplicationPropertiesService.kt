@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service
 class ApplicationPropertiesService {
     companion object{
         const val APP__ELASTIC_FETCHER_TASK_ENABLED = "app.elastic-fetcher-task-enabled"
+        const val APP__ELASTIC_INDEX_NAME = "app.elastic-index-name"
+        const val APP__ELASTIC_INDEX_ERROR_NAME = "app.elastic-index-error-name"
     }
 
     @Value("\${spring.application.name}")
@@ -62,4 +64,10 @@ class ApplicationPropertiesService {
 
     @Value("\${app.elastic-scheme}")
     lateinit var appElasticScheme: String
+
+    @Value("\${$APP__ELASTIC_INDEX_NAME}")
+    lateinit var appElasticIndexName: String
+
+    @Value("\${$APP__ELASTIC_INDEX_ERROR_NAME}")
+    lateinit var appElasticIndexErrorName: String
 }
