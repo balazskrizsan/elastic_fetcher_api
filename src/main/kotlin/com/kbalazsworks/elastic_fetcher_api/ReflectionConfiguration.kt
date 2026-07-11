@@ -17,8 +17,6 @@ class AppRuntimeHintsRegistrar : RuntimeHintsRegistrar {
     override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
         val categories = MemberCategory.entries.toTypedArray()
 
-        hints.reflection().registerType(org.apache.commons.logging.LogFactoryService::class.java, *categories)
-        hints.reflection().registerType(org.apache.commons.logging.LogFactory::class.java, *categories)
         hints.reflection().registerType(org.springframework.http.ResponseEntity::class.java, *categories)
         hints.reflection().registerType(ch.qos.logback.classic.LoggerContext::class.java, *categories)
         hints.reflection().registerType(ch.qos.logback.core.spi.ContextAwareBase::class.java, *categories)
