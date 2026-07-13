@@ -16,7 +16,7 @@ class ClassifierService(
     }
 
     fun run(index: String, errorIndexName: String, batchSize: Int = 20): Boolean {
-        val state = runStateService.getByIndex(index)
+        val state = runStateService.getOrDefaultByIndex(index)
         log.info("Cycle start: {} / {}", index, state.timestamp)
 
         val hits = elasticService.fetchOverInfo(index, batchSize, state.timestamp, state.doc)
