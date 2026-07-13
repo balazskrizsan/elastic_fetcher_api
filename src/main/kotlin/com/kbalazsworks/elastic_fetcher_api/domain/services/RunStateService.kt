@@ -35,7 +35,7 @@ class RunStateService(private val repository: RunStateRepository) {
             log.warn("No run state found for index={}, using default (previous day)", index)
             val previousDayTimestamp = Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli()
             val defaultState = RunState(index, previousDayTimestamp, 0L)
-            repository._saveOnDuplicateKeyUpdate(defaultState)
+            repository._save(defaultState)
             defaultState
         }
     }

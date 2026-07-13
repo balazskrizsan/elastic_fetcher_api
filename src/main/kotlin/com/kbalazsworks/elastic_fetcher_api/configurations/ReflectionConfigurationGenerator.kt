@@ -5,6 +5,9 @@ import ch.qos.logback.core.spi.ContextAwareBase
 import com.kbalazsworks.common.io_module.services.FileService
 import com.kbalazsworks.common.native_build_module.services.RuntimeHintsReflectionGenerator
 import com.kbalazsworks.common.templating_module.services.MustacheService
+import com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.FlywaySchemaHistoryRecord
+import com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.RunStatesRecord
+import com.kbalazsworks.elastic_fetcher_api.domain.entities.RunState
 import com.kbalazsworks.elastic_fetcher_api.domain.services.ApplicationPropertiesService
 import com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry
 import jakarta.annotation.PostConstruct
@@ -39,6 +42,9 @@ class ReflectionConfigurationGenerator(private val ap: ApplicationPropertiesServ
                     LoggerContext::class.java,
                     ContextAwareBase::class.java,
                     LogEntry::class.java,
+                    RunState::class.java,
+                    RunStatesRecord::class.java,
+                    FlywaySchemaHistoryRecord::class.java,
                 )
             )
     }

@@ -12,6 +12,9 @@ import org.springframework.context.annotation.Configuration
     ch.qos.logback.classic.LoggerContext::class,
     ch.qos.logback.core.spi.ContextAwareBase::class,
     com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry::class,
+    com.kbalazsworks.elastic_fetcher_api.domain.entities.RunState::class,
+    com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.RunStatesRecord::class,
+    com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.FlywaySchemaHistoryRecord::class,
 )
 class AppRuntimeHintsRegistrar : RuntimeHintsRegistrar {
     override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
@@ -21,5 +24,8 @@ class AppRuntimeHintsRegistrar : RuntimeHintsRegistrar {
         hints.reflection().registerType(ch.qos.logback.classic.LoggerContext::class.java, *categories)
         hints.reflection().registerType(ch.qos.logback.core.spi.ContextAwareBase::class.java, *categories)
         hints.reflection().registerType(com.kbalazsworks.elastic_fetcher_api.domain.value_objects.LogEntry::class.java, *categories)
+        hints.reflection().registerType(com.kbalazsworks.elastic_fetcher_api.domain.entities.RunState::class.java, *categories)
+        hints.reflection().registerType(com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.RunStatesRecord::class.java, *categories)
+        hints.reflection().registerType(com.kbalazsworks.elastic_fetcher_api.domain.db.tables.records.FlywaySchemaHistoryRecord::class.java, *categories)
     }
 }
